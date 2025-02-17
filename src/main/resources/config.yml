@@ -5,7 +5,11 @@ allowed-blocks:
   - STONE
   - DIRT
 
+enabled: true # false にすると無効化される
+
 messages:
   death: "&cYou stepped on a restricted block!"
   reload: "&aConfig reloaded successfully!"
   help: "&bUse /blockrestrictor reload to reload the config."
+  enabled: "&aBlock restriction is now enabled."
+  disabled: "&cBlock restriction is now disabled."
