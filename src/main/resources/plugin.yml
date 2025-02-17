@@ -1,0 +1,17 @@
+name: BlockRestrictor
+version: '1.0'
+main: com.koirdsuzu.blockrestrictor.BlockRestrictor
+api-version: '1.16'
+authors: [ koirdsuzu ]
+description: A plugin that kills players when they step on an unapproved block.
+website: https://github.com/koirdsuzu/
+commands:
+  blockrestrictor:
+    description: Manage the BlockRestrictor plugin
+    usage: "/blockrestrictor <reload/help>"
+    permission: blockrestrictor.use
+
+permissions:
+  blockrestrictor.use:
+    description: Allows usage of BlockRestrictor commands
+    default: op

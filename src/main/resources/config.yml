@@ -1,0 +1,11 @@
+# 足場として許可するブロック
+# このブロックの上では死なない
+allowed-blocks:
+  - GRASS_BLOCK
+  - STONE
+  - DIRT
+
+messages:
+  death: "&cYou stepped on a restricted block!"
+  reload: "&aConfig reloaded successfully!"
+  help: "&bUse /blockrestrictor reload to reload the config."
