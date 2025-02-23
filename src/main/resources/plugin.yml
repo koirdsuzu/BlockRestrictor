@@ -1,5 +1,5 @@
 name: BlockRestrictor
-version: '1.0'
+version: '1.1'
 main: com.koirdsuzu.blockrestrictor.BlockRestrictor
 api-version: '1.16'
 authors: [ koirdsuzu ]
@@ -14,4 +14,7 @@ commands:
 permissions:
   blockrestrictor.use:
     description: Allows usage of BlockRestrictor commands
+    default: op
+  blockrestrictor.bypass:
+    description: Allows bypassing block restrictions
     default: op

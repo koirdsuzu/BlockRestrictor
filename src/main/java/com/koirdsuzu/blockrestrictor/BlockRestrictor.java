@@ -1,43 +1,56 @@
 package com.koirdsuzu.blockrestrictor;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
+import java.io.File;
+import java.util.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-public class BlockRestrictor extends JavaPlugin implements Listener {
-    private Set<Material> allowedBlocks = new HashSet<>();
-    private boolean restrictionEnabled;
+public class BlockRestrictor extends JavaPlugin {
+    public static BlockRestrictor plugin;
+    public static FileConfiguration config;
+    public static final List<Material> allowedBlocks = Lists.newArrayList();
+    public static boolean restrictionEnabled;
     private String deathMessage, reloadMessage, helpMessage, enabledMessage, disabledMessage;
+    public static final Map<Player, Material> map = Maps.newHashMap();
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
-        loadConfigValues();
-        getServer().getPluginManager().registerEvents(this, this);
-        getCommand("blockrestrictor").setExecutor(new BlockRestrictorCommand(this));
+        plugin = this;
+        this.loadConfiguration();
+        this.loadConfigValues();
+
+        this.getServer().getPluginManager().registerEvents(new PlayerMoveListener(), this);
+        this.getServer().getPluginManager().registerEvents(new PlayerDeathListener(), this);
+
+        final PluginCommand command = this.getCommand("blockrestrictor");
+        if (command != null){
+            command.setExecutor(new Commands());
+        }
+    }
+
+    private void loadConfiguration(){
+        final File configFile = new File(this.getDataFolder(), "config.yml");
+        if (!configFile.exists()){
+            this.saveDefaultConfig();
+        }
+
+        config = this.getConfig();
     }
 
     public void loadConfigValues() {
-        FileConfiguration config = getConfig();
         restrictionEnabled = config.getBoolean("enabled", true);
 
         allowedBlocks.clear();
-        List<String> blockList = config.getStringList("allowed-blocks");
+
+        final List<String> blockList = config.getStringList("allowed-blocks");
         for (String blockName : blockList) {
             try {
                 allowedBlocks.add(Material.valueOf(blockName.toUpperCase()));
@@ -53,32 +66,15 @@ public class BlockRestrictor extends JavaPlugin implements Listener {
         disabledMessage = ChatColor.translateAlternateColorCodes('&', config.getString("messages.disabled", "&cBlock restriction is now disabled."));
     }
 
-    @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
-        if (!restrictionEnabled) return; // 無効化されている場合は処理しない
-
-        Player player = event.getPlayer();
-        Material blockUnder = player.getLocation().subtract(0, 1, 0).getBlock().getType(); // 真下のブロックを取得
-
-        if (blockUnder == Material.AIR) return; // 真下が空気なら何もしない
-
-        if (!allowedBlocks.contains(blockUnder)) {
-            player.setHealth(0.0);
-            player.sendMessage(deathMessage);
-        }
-    }
-
-    public boolean isRestrictionEnabled() {
-        return restrictionEnabled;
-    }
-
     public void setRestrictionEnabled(boolean enabled) {
-        this.restrictionEnabled = enabled;
+        restrictionEnabled = enabled;
         getConfig().set("enabled", enabled);
         saveConfig();
+        reloadConfig();
+        config = this.getConfig();
     }
 
-    public String getDeathMessage() {
+    public String getDeathMessage(){
         return deathMessage;
     }
 
@@ -96,43 +92,5 @@ public class BlockRestrictor extends JavaPlugin implements Listener {
 
     public String getDisabledMessage() {
         return disabledMessage;
-    }
-}
-
-
-class BlockRestrictorCommand implements CommandExecutor {
-    private final BlockRestrictor plugin;
-
-    public BlockRestrictorCommand(BlockRestrictor plugin) {
-        this.plugin = plugin;
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0) {
-            sender.sendMessage(plugin.getHelpMessage());
-            return true;
-        }
-
-        if (args[0].equalsIgnoreCase("reload")) {
-            plugin.reloadConfig();
-            plugin.loadConfigValues();
-            sender.sendMessage(plugin.getReloadMessage());
-            return true;
-        } else if (args[0].equalsIgnoreCase("help")) {
-            sender.sendMessage(plugin.getHelpMessage());
-            return true;
-        } else if (args[0].equalsIgnoreCase("on")) {
-            plugin.setRestrictionEnabled(true);
-            sender.sendMessage(plugin.getEnabledMessage());
-            return true;
-        } else if (args[0].equalsIgnoreCase("off")) {
-            plugin.setRestrictionEnabled(false);
-            sender.sendMessage(plugin.getDisabledMessage());
-            return true;
-        }
-
-        sender.sendMessage(ChatColor.RED + "Invalid command. Use /blockrestrictor help.");
-        return true;
     }
 }
